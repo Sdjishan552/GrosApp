@@ -7,10 +7,6 @@
 
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="assets/NotoSansBengali-Regular-bold.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
 
 <body>
@@ -134,8 +130,6 @@
   </div>
 </div>
 
-<!-- ================= PDF TEMPLATE (CRITICAL) ================= -->
-
 <!-- ================= DELETE HISTORY POPUP ================= -->
 <div id="deleteHistoryModal" class="modal hidden">
   <div class="modal-content delete-box">
@@ -143,24 +137,24 @@
     <p>এই কাজটি ফিরিয়ে আনা যাবে না</p>
 
     <div class="delete-actions">
-      <button id="cancelDelete">❌ Cancel</button>
-      <button id="confirmDelete">🗑️ Delete</button>
+      <button id="cancelDelete">❌ বাতিল</button>
+      <button id="confirmDelete">🗑️ মুছে ফেলুন</button>
     </div>
   </div>
 </div>
 
-<!-- ================= SCRIPTS ================= -->
-<script src="app.js"></script>
-<!-- jsPDF core (MUST be first) -->
+<!-- ================= SCRIPTS (CORRECT ORDER – DO NOT CHANGE) ================= -->
+
+<!-- 1️⃣ jsPDF core -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-<!-- jsPDF autoTable plugin -->
+<!-- 2️⃣ jsPDF autoTable plugin -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
-<!-- Bengali font (AFTER jsPDF) -->
-<script src="assets/NotoSansBengali-Regular-bold.js"></script>
+<!-- 3️⃣ Bengali font (ONLY ONCE, BEFORE app.js) -->
+<script src="assets/NotoSansBengali-Regular.js"></script>
 
-<!-- Your app logic (LAST) -->
+<!-- 4️⃣ App logic (ONLY ONCE, LAST) -->
 <script src="app.js"></script>
 
 </body>
