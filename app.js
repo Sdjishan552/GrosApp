@@ -15,8 +15,7 @@ function formatDate(date = new Date()) {
 let language = localStorage.getItem("lang") || "bn";
 
 const defaultItems = [
-  { id: "chini", bn: "চিনি", en: "Sugar" },
-  { id: "dal", bn: "ডাল", en: "Lentils" }
+  { id: "chini", bn: "চিনি", en: "Sugar" }
 ];
 
 let items = JSON.parse(localStorage.getItem("items")) ||
@@ -111,7 +110,7 @@ function render() {
       <label style="display:flex; justify-content:space-between; align-items:center;">
         <span>
           <input type="checkbox" ${item.checked ? "checked" : ""}>
-          ${language === "bn" ? item.bn : item.en}
+${item.bn || item.en}
         </span>
         <button class="deleteBtn">🗑️</button>
       </label>
@@ -163,23 +162,7 @@ function save() {
 
 render();
 
-/* ================= LANGUAGE ================= */
 
-const langToggleBtn = document.getElementById("langToggle");
-
-function updateLangButton() {
-  langToggleBtn.innerText = language === "bn" ? "English" : "বাংলা";
-}
-
-langToggleBtn.onclick = () => {
-  language = language === "bn" ? "en" : "bn";
-  localStorage.setItem("lang", language);
-  updateLangButton();
-  render();
-};
-
-// set correct text on load
-updateLangButton();
 
 
 /* ================= ADD ITEM ================= */
@@ -191,19 +174,29 @@ document.getElementById("addItemBtn").onclick = () =>
 
 
 document.getElementById("saveItem").onclick = () => {
-  items.push({
-  id: Date.now(),
-  bn: bnName.value,
-  en: bnName.value,
-  checked: true,
-  quantity: Number(qty.value),
-  unit: unit.value
-});
+  const name = bnName.value.trim();
 
+  // ❌ Block empty or space-only input
+  if (name.length < 1) {
+    alert("⚠️ অন্তত একটি অক্ষর লিখুন");
+    return;
+  }
+
+  items.push({
+    id: Date.now(),
+    bn: name,
+    en: name,
+    checked: true,
+    quantity: Number(qty.value) || 1,
+    unit: unit.value
+  });
+
+  bnName.value = ""; // clear input
   save();
   modal.classList.add("hidden");
   render();
 };
+
 
 /* ================= HISTORY STORAGE ================= */
 
@@ -857,17 +850,30 @@ document.getElementById("addToMaster").onclick = () => {
 
 const voiceBtn = document.getElementById("voiceBtn");
 
-if ("webkitSpeechRecognition" in window) {
-  const recognition = new webkitSpeechRecognition();
-  recognition.lang = "bn-IN";
-  recognition.continuous = false;
+if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = "bn-IN"; // Bengali
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
 
   voiceBtn.onclick = () => {
-    recognition.start();
+    try {
+      recognition.start();
+    } catch (e) {
+      console.log("Mic already started");
+    }
   };
 
   recognition.onresult = (event) => {
-    const text = event.results[0][0].transcript;
+    const text = event.results[0][0].transcript.trim();
+
+    if (text.length < 1) {
+      alert("কিছু শোনা যায়নি, আবার বলুন");
+      return;
+    }
 
     items.push({
       id: Date.now(),
@@ -881,9 +887,15 @@ if ("webkitSpeechRecognition" in window) {
     save();
     render();
   };
+
+  recognition.onerror = (event) => {
+    alert("🎤 মাইক্রোফোন কাজ করছে না, অনুমতি চেক করুন");
+    console.error(event.error);
+  };
+
 } else {
   voiceBtn.onclick = () => {
-    alert("আপনার ব্রাউজারে ভয়েস সাপোর্ট নেই");
+    alert("এই ফোনে ভয়েস ইনপুট সাপোর্ট নেই");
   };
 }
 
