@@ -356,107 +356,9 @@ document.getElementById("cancelPreview").onclick = () => {
 };
 
 document.getElementById("confirmPdf").onclick = () => {
-  previewModal.classList.add("hidden");
+  window.print();
+};
 
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF("p", "mm", "a4");
-
-/* ================= FONT ================= */
-doc.setFont("NotoSansBengali", "bold");
-
-/* ================= TITLE ================= */
-doc.setFontSize(16);
-doc.setTextColor(0);
-doc.text("মাসিক বাজারের তালিকা", 105, 20, { align: "center" });
-
-/* ================= DATE & META (TOP LEFT) ================= */
-doc.setFontSize(10);
-doc.setTextColor(80);
-doc.text(`তারিখ: ${formatDate()}`, 14, 32);
-
-doc.text(
-  `তৈরি হয়েছে: ${new Date().toLocaleTimeString("en-IN", {
-    hour: "2-digit",
-    minute: "2-digit"
-  })}`,
-  14,
-  38
-);
-
-/* ================= SECTION TITLE ================= */
-let startY = 48;
-doc.setFontSize(12);
-doc.setTextColor(0);
-doc.text("পণ্যের তালিকা", 14, startY);
-
-/* ================= TABLE BODY ================= */
-const body = [];
-let serial = 1;
-
-items
-  .filter(item => item.checked)
-  .forEach(item => {
-    body.push([
-      serial++,
-      item.bn,
-      `${item.quantity} ${item.unit}`,
-      ""
-    ]);
-  });
-
-/* ================= TABLE ================= */
-doc.autoTable({
-  startY: startY + 5,
-
-  head: [[ "ক্রম", "পণ্যের নাম", "পরিমাণ", "মূল্য (₹)" ]],
-  body: body,
-
-  theme: "grid",
-
-  styles: {
-    font: "NotoSansBengali",
-    fontStyle: "bold",
-    fontSize: 10,          // ⬇️ smaller font
-    cellPadding: 3,        // ⬇️ MUCH smaller box height
-    valign: "middle",
-    lineColor: [190, 190, 190],
-    lineWidth: 0.25
-  },
-
-  headStyles: {
-    fillColor: [0, 100, 0],
-    textColor: 255,
-    fontSize: 10.5,        // ⬇️ smaller header text
-    cellPadding: 3         // ⬇️ compact header
-  },
-
-  alternateRowStyles: {
-    fillColor: [250, 250, 250]
-  },
-
-  columnStyles: {
-    0: { cellWidth: 14, halign: "center" },  // ⬇️ narrower
-    1: { cellWidth: 88, halign: "left" },    // ⬆️ name gets space
-    2: { cellWidth: 36, halign: "center" },
-    3: { cellWidth: 26, halign: "center" }
-  }
-});
-
-
-/* ================= FOOTER ================= */
-const pageHeight = doc.internal.pageSize.height;
-doc.setFontSize(9);
-doc.setTextColor(120);
-doc.text(
-  "This is a system generated report. No manual alterations.",
-  105,
-  pageHeight - 12,
-  { align: "center" }
-);
-
-
-  /* ================= SAVE ================= */
-  doc.save(`বাজার-তালিকা-${formatDate()}.pdf`);
 
 
 /* ================= SAVE TO HISTORY ================= */
@@ -474,7 +376,7 @@ const historyEntry = {
 
 saveHistory(historyEntry);
 
-};
+
 /* ================= HISTORY UI ================= */
 
 document.getElementById("historyBtn").onclick = () => {
@@ -898,5 +800,8 @@ if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
     alert("এই ফোনে ভয়েস ইনপুট সাপোর্ট নেই");
   };
 }
+window.onafterprint = () => {
+  previewModal.classList.add("hidden");
+};
 
 }); // End of DOMContentLoaded
