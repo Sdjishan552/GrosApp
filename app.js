@@ -123,10 +123,12 @@ ${item.bn || item.en}
   value="${item.quantity || ""}"
 >
           <select>
-            <option ${item.unit === "unit" ? "selected" : ""}>unit</option>
-            <option ${item.unit === "kg" ? "selected" : ""}>kg</option>
-            <option ${item.unit === "gram" ? "selected" : ""}>gram</option>
+  <option ${item.unit === "packet" ? "selected" : ""}>packet</option>
+  <option ${item.unit === "kg" ? "selected" : ""}>kg</option>
+  <option ${item.unit === "gram" ? "selected" : ""}>gram</option>
+  <option ${item.unit === "chain" ? "selected" : ""}>chain</option>
           </select>
+
         </div>
       ` : ""}
     `;
@@ -178,7 +180,7 @@ function parseVoiceInput(text) {
 
   let t = text.toLowerCase().trim();
 
-  // Bengali → English numbers (basic)
+  // Bengali → English numbers
   const bnNums = {
     "এক": 1, "দুই": 2, "তিন": 3, "চার": 4, "পাঁচ": 5,
     "ছয়": 6, "সাত": 7, "আট": 8, "নয়": 9, "দশ": 10
@@ -188,49 +190,48 @@ function parseVoiceInput(text) {
     t = t.replace(bn, bnNums[bn]);
   });
 
-  // Units map (with decilitre)
+  // Units map
   const unitMap = {
-    "kg": ["kg", "কেজি", "কেজী"],
-    "gram": ["g", "gm", "gram", "গ্রাম"],
-    "litre": ["l", "lt", "liter", "litre", "লিটার"],
-    "dl": ["dl", "decilitre", "deciliter", "ডেসিলিটার"],
-    "ml": ["ml", "মিলি"]
+    kg: ["kg", "কেজি", "কেজী"],
+    gram: ["g", "gm", "gram", "গ্রাম"],
+    litre: ["l", "lt", "liter", "litre", "লিটার"],
+    ml: ["ml", "মিলি"],
+    chain: ["chain", "চেইন", "চেন"],
+    packet: ["packet", "প্যাকেট"]
   };
 
-  let quantity = null;
-  let unit = null;
+  let detectedUnit = null;
+  let quantity = "";
 
-  // extract number (integer or decimal)
+  // 🔐 STEP 1: Detect & lock UNIT first
+  for (const [key, values] of Object.entries(unitMap)) {
+    for (const v of values) {
+      if (t.includes(v)) {
+        detectedUnit = key;
+        t = t.replace(v, "").trim();
+        break;
+      }
+    }
+    if (detectedUnit) break;
+  }
+
+  // 🔢 STEP 2: Extract number
   const numMatch = t.match(/(\d+(\.\d+)?)/);
   if (numMatch) {
     quantity = parseFloat(numMatch[1]);
     t = t.replace(numMatch[1], "").trim();
   }
 
-  // extract unit
-  for (let key in unitMap) {
-    for (let u of unitMap[key]) {
-      if (t.includes(u)) {
-        unit = key;
-        t = t.replace(u, "").trim();
-        break;
-      }
-    }
-    if (unit) break;
-  }
-
-  // remaining text = item name
+  // 🏷️ STEP 3: Remaining text = item name
   const name = t.trim();
-
   if (!name) return null;
 
   return {
     name,
-    quantity: quantity ?? "",
-    unit: unit ?? "unit"
+    quantity,
+    unit: detectedUnit || "packet" // default ONLY if nothing spoken
   };
 }
-
 
 /* ================= ADD ITEM ================= */
 
@@ -256,7 +257,7 @@ if (!quantity || quantity <= 0) {
     return;
   }
 
-  items.push({
+  items.unshift({
   id: Date.now(),
   bn: name,
   en: name,
@@ -379,18 +380,18 @@ document.getElementById("loadMaster").onclick = () => {
     let found = items.find(i => i.bn === m.bn);
 
     if (!found) {
-      items.push({
+      items.unshift({
         id: Date.now() + Math.random(),
         bn: m.bn,
         en: m.en,
         checked: true,
         quantity: "",
-        unit: "unit"
+        unit: "packet"
       });
     } else {
       found.checked = true;
       found.quantity = 1;
-      found.unit = "unit";
+      found.unit = "packet";
     }
   });
 
@@ -915,7 +916,7 @@ if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
     const parsed = parseVoiceInput(text);
 
 if (parsed) {
-  items.push({
+  items.unshift({
     id: Date.now(),
     bn: parsed.name,
     en: parsed.name,
@@ -925,13 +926,13 @@ if (parsed) {
   });
 } else {
   // fallback → old behaviour
-  items.push({
+  items.unshift({
     id: Date.now(),
     bn: text,
     en: text,
     checked: true,
     quantity: "",
-    unit: "unit"
+    unit: "packet"
   });
 }
 
@@ -960,6 +961,13 @@ const saveImageBtn = document.getElementById("saveImageBtn");
 
 if (saveImageBtn) {
   saveImageBtn.onclick = async () => {
+// 🚫 Minimum 3 items rule
+const selectedItems = items.filter(i => i.checked);
+
+if (selectedItems.length < 3) {
+  alert("⚠️ অন্তত ৩টি জিনিস নির্বাচন করতে হবে");
+  return;
+}
 
     // ✅ Validation (reuse your rule)
     const invalidItem = items.find(
