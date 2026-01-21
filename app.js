@@ -117,7 +117,11 @@ ${item.bn || item.en}
 
       ${item.checked ? `
         <div>
-          <input type="number" value="${item.quantity}">
+<input 
+  type="number" 
+  placeholder="পরিমাণ লিখুন"
+  value="${item.quantity || ""}"
+>
           <select>
             <option ${item.unit === "unit" ? "selected" : ""}>unit</option>
             <option ${item.unit === "kg" ? "selected" : ""}>kg</option>
@@ -162,6 +166,12 @@ function save() {
 
 render();
 
+function resetCurrentList() {
+  items.length = 0;   // 🔥 THIS CLEARS ALL ITEMS
+
+  save();             // update localStorage
+  render();           // re-render UI
+}
 
 
 
@@ -317,7 +327,7 @@ document.getElementById("loadMaster").onclick = () => {
         bn: m.bn,
         en: m.en,
         checked: true,
-        quantity: 1,
+        quantity: "",
         unit: "unit"
       });
     } else {
@@ -338,87 +348,72 @@ document.getElementById("loadMaster").onclick = () => {
 
 /* ================= SHARE PDF (NEW FEATURE) ================= */
 
-document.getElementById("sharePdfBtn").onclick = async () => {
-  // 1️⃣ Build history entry (same structure, reused)
-  const historyEntry = {
-    date: formatDate(),
-    timestamp: Date.now(),
-    items: items
-      .filter(item => item.checked)
-      .map(item => ({
-        name: item.bn,
-        quantity: item.quantity,
-        unit: item.unit
-      }))
-  };
+const sharePdfBtn = document.getElementById("sharePdfBtn");
+if (sharePdfBtn) {
+  sharePdfBtn.onclick = async () => {
+    // 1️⃣ Build history entry
+    const historyEntry = {
+      date: formatDate(),
+      timestamp: Date.now(),
+      items: items
+        .filter(item => item.checked)
+        .map(item => ({
+          name: item.bn,
+          quantity: item.quantity,
+          unit: item.unit
+        }))
+    };
 
-  // 2️⃣ Save to history FIRST (even if PDF not manually generated)
-  saveHistory(historyEntry);
+    saveHistory(historyEntry);
 
-  // 3️⃣ Create PDF silently using jsPDF
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
 
-  doc.setFont("NotoSansBengali-Regular", "normal");
-  doc.setFontSize(14);
-  doc.text("মাসিক বাজারের তালিকা", 14, 15);
-  doc.setFontSize(10);
-  doc.text("তারিখ: " + historyEntry.date, 14, 22);
+    doc.setFont("NotoSansBengali-Regular", "normal");
+    doc.setFontSize(14);
+    doc.text("মাসিক বাজারের তালিকা", 14, 15);
+    doc.setFontSize(10);
+    doc.text("তারিখ: " + historyEntry.date, 14, 22);
 
-  const tableData = historyEntry.items.map((item, index) => ([
-    index + 1,
-    item.name,
-    `${item.quantity} ${item.unit}`,
-    ""
-  ]));
+    const tableData = historyEntry.items.map((item, index) => ([
+      index + 1,
+      item.name,
+      `${item.quantity} ${item.unit}`,
+      ""
+    ]));
 
-  doc.autoTable({
-    startY: 28,
-    head: [["ক্রম", "পণ্যের নাম", "পরিমাণ", "দাম"]],
-    body: tableData,
-    styles: { font: "NotoSansBengali-Regular" }
-  });
+    doc.autoTable({
+      startY: 28,
+      head: [["ক্রম", "পণ্যের নাম", "পরিমাণ", "দাম"]],
+      body: tableData,
+      styles: { font: "NotoSansBengali-Regular" }
+    });
 
-  // 4️⃣ Convert PDF to Blob
-  const pdfBlob = doc.output("blob");
-  const file = new File([pdfBlob], "bazaar-list.pdf", {
-    type: "application/pdf"
-  });
+    const pdfBlob = doc.output("blob");
+    const file = new File([pdfBlob], "bazaar-list.pdf", {
+      type: "application/pdf"
+    });
 
-  // 5️⃣ Try Web Share API
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try {
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({
         title: "মাসিক বাজারের তালিকা",
-        text: "আমার বাজারের তালিকা",
         files: [file]
       });
-    } catch (err) {
-      alert("শেয়ার বাতিল হয়েছে");
+    } else {
+      doc.save("bazaar-list.pdf");
     }
-  } else {
-    // 6️⃣ Fallback: download if share not supported
-    doc.save("bazaar-list.pdf");
-    alert("এই ডিভাইসে শেয়ার সাপোর্ট নেই, PDF ডাউনলোড হয়েছে");
-  }
 
-  // 7️⃣ Close preview after share
-  previewModal.classList.add("hidden");
-};
+    previewModal.classList.add("hidden");
+  };
+}
+
 
 
 const previewModal = document.getElementById("pdfPreviewModal");
 const previewTable = document.getElementById("previewTable");
 const previewDate = document.getElementById("previewDate");
 
-const invalidItem = items.find(
-  i => i.checked && (!i.quantity || i.quantity <= 0)
-);
 
-if (invalidItem) {
-  alert("⚠️ সব নির্বাচিত জিনিসের পরিমাণ দিতে হবে");
-  return;
-}
 document.getElementById("generatePdfBtn").onclick = () => {
   previewTable.innerHTML = "";
   previewDate.innerText = "তারিখ: " + formatDate();
@@ -440,10 +435,6 @@ document.getElementById("generatePdfBtn").onclick = () => {
 };
 document.getElementById("cancelPreview").onclick = () => {
   previewModal.classList.add("hidden");
-};
-
-document.getElementById("confirmPdf").onclick = () => {
-  window.print();
 };
 
 
@@ -887,9 +878,93 @@ if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
   voiceBtn.onclick = () => {
     alert("এই ফোনে ভয়েস ইনপুট সাপোর্ট নেই");
   };
-}
-window.onafterprint = () => {
-  previewModal.classList.add("hidden");
+
 };
 
+
+/* ================= SAVE AS A4 IMAGE ================= */
+
+const saveImageBtn = document.getElementById("saveImageBtn");
+
+if (saveImageBtn) {
+  saveImageBtn.onclick = async () => {
+
+    // ✅ Validation (reuse your rule)
+    const invalidItem = items.find(
+      i => i.checked && (!i.quantity || i.quantity <= 0)
+    );
+    if (invalidItem) {
+      alert("⚠️ সব নির্বাচিত জিনিসের পরিমাণ দিতে হবে");
+      return;
+    }
+    // ✅ SAVE TO HISTORY (same structure as PDF)
+const historyEntry = {
+  date: formatDate(),
+  timestamp: Date.now(),
+  items: items
+    .filter(item => item.checked)
+    .map(item => ({
+      name: item.bn,
+      quantity: item.quantity,
+      unit: item.unit
+    }))
+};
+
+saveHistory(historyEntry);
+
+    // 1️⃣ Fill A4 data
+    document.getElementById("a4Date").innerText =
+      "তারিখ: " + formatDate();
+
+    const tbody = document.getElementById("a4TableBody");
+    tbody.innerHTML = "";
+
+    let count = 1;
+    items.filter(i => i.checked).forEach(item => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td style="border:1px solid #000; text-align:center;">${count++}</td>
+        <td style="border:1px solid #000;">${item.bn}</td>
+        <td style="border:1px solid #000; text-align:center;">
+          ${item.quantity} ${item.unit}
+        </td>
+        <td style="border:1px solid #000;"></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // 2️⃣ Capture image (memory-safe)
+    const a4 = document.getElementById("a4ImagePage");
+
+    const canvas = await html2canvas(a4, {
+      scale: 2,
+      backgroundColor: "#ffffff"
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+
+    // 3️⃣ Save or Share
+    const blob = await (await fetch(imgData)).blob();
+    const file = new File([blob], "bazaar-list-A4.png", {
+      type: "image/png"
+    });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: "মাসিক বাজারের তালিকা",
+        files: [file]
+      });
+    } else {
+      const link = document.createElement("a");
+      link.href = imgData;
+      link.download = "bazaar-list-A4.png";
+      link.click();
+    }
+    previewModal.classList.add("hidden");
+resetCurrentList();
+
+  };
+}
+
 }); // End of DOMContentLoaded
+
