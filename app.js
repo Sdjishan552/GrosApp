@@ -173,6 +173,63 @@ function resetCurrentList() {
   render();           // re-render UI
 }
 
+function parseVoiceInput(text) {
+  if (!text) return null;
+
+  let t = text.toLowerCase().trim();
+
+  // Bengali → English numbers (basic)
+  const bnNums = {
+    "এক": 1, "দুই": 2, "তিন": 3, "চার": 4, "পাঁচ": 5,
+    "ছয়": 6, "সাত": 7, "আট": 8, "নয়": 9, "দশ": 10
+  };
+
+  Object.keys(bnNums).forEach(bn => {
+    t = t.replace(bn, bnNums[bn]);
+  });
+
+  // Units map (with decilitre)
+  const unitMap = {
+    "kg": ["kg", "কেজি", "কেজী"],
+    "gram": ["g", "gm", "gram", "গ্রাম"],
+    "litre": ["l", "lt", "liter", "litre", "লিটার"],
+    "dl": ["dl", "decilitre", "deciliter", "ডেসিলিটার"],
+    "ml": ["ml", "মিলি"]
+  };
+
+  let quantity = null;
+  let unit = null;
+
+  // extract number (integer or decimal)
+  const numMatch = t.match(/(\d+(\.\d+)?)/);
+  if (numMatch) {
+    quantity = parseFloat(numMatch[1]);
+    t = t.replace(numMatch[1], "").trim();
+  }
+
+  // extract unit
+  for (let key in unitMap) {
+    for (let u of unitMap[key]) {
+      if (t.includes(u)) {
+        unit = key;
+        t = t.replace(u, "").trim();
+        break;
+      }
+    }
+    if (unit) break;
+  }
+
+  // remaining text = item name
+  const name = t.trim();
+
+  if (!name) return null;
+
+  return {
+    name,
+    quantity: quantity ?? "",
+    unit: unit ?? "unit"
+  };
+}
 
 
 /* ================= ADD ITEM ================= */
@@ -855,14 +912,29 @@ if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
       return;
     }
 
-    items.push({
-  id: Date.now(),
-  bn: text,
-  en: text,
-  checked: true,
-  quantity: "",   // ✅ EMPTY
-  unit: "unit"
-});
+    const parsed = parseVoiceInput(text);
+
+if (parsed) {
+  items.push({
+    id: Date.now(),
+    bn: parsed.name,
+    en: parsed.name,
+    checked: true,
+    quantity: parsed.quantity,
+    unit: parsed.unit
+  });
+} else {
+  // fallback → old behaviour
+  items.push({
+    id: Date.now(),
+    bn: text,
+    en: text,
+    checked: true,
+    quantity: "",
+    unit: "unit"
+  });
+}
+
 
 
     save();
