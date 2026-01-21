@@ -1,3 +1,18 @@
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: 
+    linear-gradient(
+      rgba(255, 255, 255, 0.85),
+      rgba(255, 255, 255, 0.85)
+    ),
+    url("assets/bg.jpg") no-repeat center center fixed;
+
+  background-size: cover;
+  font-family: system-ui, sans-serif;
+}
+
+
 /* =====================================================
    GLOBAL RESET & BASE
 ===================================================== */
@@ -639,4 +654,31 @@ tbody tr:last-child td {
 
 .toast.hidden {
   display: none;
+}
+
+
+/*----------------------------------------------------------
+/* ================= APP BACKGROUND ================= */
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+
+  background-image: url("assets/bg1.png"); /* 👈 image path */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+
+  min-height: 100vh;
+}
+
+/* Soft white overlay for readability */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: -1;
 }
