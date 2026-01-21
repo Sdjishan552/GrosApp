@@ -287,6 +287,8 @@ tbody tr:last-child td {
   width: 90%;
   max-width: 420px;
   box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+  max-height: 85vh;          /* never exceed screen height */
+  overflow-y: auto;          /* enable vertical scroll */
 }
 
 /* =====================================================
@@ -506,14 +508,4 @@ tbody tr:last-child td {
   padding: 20px;
   display: block;     /* REQUIRED */
   visibility: visible;
-}
-styles: {
-  font: "NotoSansBengali",
-  fontStyle: "bold",
-  fontSize: 10,
-  cellPadding: 3,
-  valign: "middle",
-  lineColor: [190, 190, 190],
-  lineWidth: 0.25,
-  overflow: "linebreak"   // ⬅️ ADD THIS
 }
