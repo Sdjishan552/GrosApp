@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>মাসিক বাজারের তালিকা</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="assets/NotoSansBengali-Regular-bold.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+</head>
+
+<body>
+
+<header>
+  <h1>📋 মাসিক বাজারের তালিকা</h1>
+  <button id="langToggle">English</button>
+</header>
+
+<!-- ================= HOME PAGE ================= -->
+<section id="homePage">
+
+  <div class="action-grid">
+    <button class="action-card history" id="historyBtn">
+      📜<br><br>কেনাকাটার ইতিহাস
+    </button>
+
+    <button class="action-card voice" id="voiceBtn">
+      🎙<br><br>বলুন
+    </button>
+
+    <button class="action-card add" id="addItemBtn">
+      ➕<br><br>নতুন জিনিস যোগ
+    </button>
+
+    <button class="action-card master" id="loadMaster">
+      📦<br><br>মাস্টার তালিকা আনুন
+    </button>
+  </div>
+
+  <section id="itemList"></section>
+
+  <button id="generatePdfBtn">📄 তালিকা তৈরি করুন (PDF)</button>
+  <button id="manageMaster">⚙️ মাস্টার তালিকা ম্যানেজ করুন</button>
+
+  <!-- ===== PDF PREVIEW MODAL ===== -->
+  <div id="pdfPreviewModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>📄 তালিকা প্রিভিউ</h2>
+      <p id="previewDate"></p>
+
+      <table border="1" cellspacing="0" cellpadding="6" width="100%">
+        <thead>
+          <tr>
+            <th>ক্রম</th>
+            <th>পণ্যের নাম</th>
+            <th>পরিমাণ</th>
+            <th>দাম (₹)</th>
+          </tr>
+        </thead>
+        <tbody id="previewTable"></tbody>
+      </table>
+
+      <button id="confirmPdf">✅ PDF তৈরি করুন</button>
+      <button id="cancelPreview">❌ ফিরে যান</button>
+    </div>
+  </div>
+
+</section>
+<!-- ================= END HOME PAGE ================= -->
+
+<!-- ================= HISTORY PAGE ================= -->
+<section id="historyPage" class="hidden">
+  <h2>📜 কেনাকাটার ইতিহাস</h2>
+  <p>তুলনার জন্য ২ থেকে ৬ মাস নির্বাচন করুন</p>
+
+  <div id="historyCards"></div>
+
+  <button id="compareBtn">📊 তুলনা করুন</button>
+  <button id="backToHome">⬅ ফিরে যান</button>
+</section>
+
+<!-- ================= MASTER LIST PAGE ================= -->
+<section id="masterPage" class="hidden">
+  <h2>📦 মাস্টার তালিকা</h2>
+
+  <div id="masterItems"></div>
+
+  <input id="masterInput" placeholder="নতুন জিনিস লিখুন" />
+  <button id="addToMaster">➕ যোগ করুন</button>
+
+  <button id="backFromMaster">⬅ ফিরে যান</button>
+</section>
+
+<!-- ================= HISTORY DETAIL PAGE ================= -->
+<section id="historyDetailPage" class="hidden">
+  <h2 id="historyDetailDate"></h2>
+  <ul id="historyDetailList"></ul>
+  <button id="backToHistory">⬅ ইতিহাসে ফিরে যান</button>
+</section>
+
+<!-- ================= COMPARISON PAGE ================= -->
+<section id="comparisonPage" class="hidden">
+  <h2>📊 মাসভিত্তিক তুলনা</h2>
+  <div id="comparisonContent"></div>
+  <button id="backFromComparison">⬅ ফিরে যান</button>
+</section>
+
+<!-- ================= ADD ITEM MODAL ================= -->
+<div id="modal" class="modal hidden">
+  <div class="modal-content">
+    <h2>➕ নতুন জিনিস</h2>
+
+    <label>পণ্যের নাম</label>
+    <div class="autocomplete-wrapper">
+      <input id="bnName" autocomplete="off" />
+      <div id="itemSuggestions" class="hidden"></div>
+    </div>
+
+    <label>পরিমাণ</label>
+    <input type="number" id="qty" value="1" />
+
+    <label>Unit</label>
+    <select id="unit">
+      <option value="unit">unit</option>
+      <option value="kg">kg</option>
+      <option value="gram">gram</option>
+    </select>
+
+    <button id="saveItem">যোগ করুন</button>
+    <button id="closeModal">বন্ধ করুন</button>
+  </div>
+</div>
+
+<!-- ================= PDF TEMPLATE (CRITICAL) ================= -->
+
+<!-- ================= DELETE HISTORY POPUP ================= -->
+<div id="deleteHistoryModal" class="modal hidden">
+  <div class="modal-content delete-box">
+    <h3>⚠️ ইতিহাস মুছে ফেলবেন?</h3>
+    <p>এই কাজটি ফিরিয়ে আনা যাবে না</p>
+
+    <div class="delete-actions">
+      <button id="cancelDelete">❌ বাতিল</button>
+      <button id="confirmDelete">🗑️ মুছে ফেলুন</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= SCRIPTS ================= -->
+<script src="app.js"></script>
+<!-- jsPDF core (MUST be first) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- jsPDF autoTable plugin -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<!-- Bengali font (AFTER jsPDF) -->
+<script src="assets/NotoSansBengali-Regular-bold.js"></script>
+
+<!-- Your app logic (LAST) -->
+<script src="app.js"></script>
+
+</body>
+</html>

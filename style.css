@@ -1,0 +1,519 @@
+/* =====================================================
+   GLOBAL RESET & BASE
+===================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(180deg, #eef2ff, #f8fafc);
+  color: #1f2933;
+}
+
+/* =====================================================
+   HEADER
+===================================================== */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 16px;
+  border-radius: 0 0 20px 20px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+}
+
+header h1 {
+  font-size: 18px;
+}
+
+#langToggle {
+  border: none;
+  background: white;
+  color: #4c1d95;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* =====================================================
+   PAGE PADDING & SPACING
+===================================================== */
+#homePage,
+#historyPage,
+#masterPage,
+#comparisonPage,
+#historyDetailPage {
+  padding: 16px;
+}
+
+section {
+  margin-bottom: 26px;
+}
+
+h2, h3 {
+  margin-bottom: 12px;
+}
+
+p {
+  margin: 10px 0;
+  line-height: 1.5;
+}
+
+/* =====================================================
+   TOP ACTION GRID (2x2)
+===================================================== */
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.action-card {
+  height: 100px;
+  border-radius: 18px;
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.3;
+  box-shadow: 0 12px 22px rgba(0,0,0,0.18);
+  transition: transform 0.15s ease;
+}
+
+.action-card:active {
+  transform: scale(0.96);
+}
+
+.action-card.history {
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+}
+
+.action-card.voice {
+  background: linear-gradient(135deg, #00c6ff, #0072ff);
+}
+
+.action-card.add {
+  background: linear-gradient(135deg, #43e97b, #38f9d7);
+  color: #043;
+}
+
+.action-card.master {
+  background: linear-gradient(135deg, #f7971e, #ffd200);
+  color: #4a2c00;
+}
+
+/* =====================================================
+   GLOBAL BUTTON STYLE
+===================================================== */
+button {
+  border: none;
+  border-radius: 16px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #e5e7eb;
+  color: #111827;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+/* =====================================================
+   PRIMARY & DANGER BUTTONS
+===================================================== */
+#generatePdfBtn {
+  width: 100%;
+  margin-top: 10px;
+  background: linear-gradient(135deg, #11998e, #38ef7d);
+  color: white;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+#manageMaster {
+  width: 100%;
+  margin-top: 12px;
+  background: linear-gradient(135deg, #ff416c, #ff4b2b);
+  color: white;
+}
+
+/* =====================================================
+   ITEM LIST
+===================================================== */
+#itemList {
+  margin-top: 10px;
+}
+
+.item {
+  background: white;
+  border-radius: 18px;
+  padding: 14px;
+  margin-bottom: 14px;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+}
+
+.item label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.item > div {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* =====================================================
+   CHECKBOX STYLE
+===================================================== */
+input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: #4f46e5;
+  cursor: pointer;
+}
+
+/* =====================================================
+   INPUTS & SELECT
+===================================================== */
+input,
+select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  background: #f9fafb;
+}
+
+label {
+  display: block;
+  margin-top: 12px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+/* =====================================================
+   TABLES (PDF + COMPARISON)
+===================================================== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 14px;
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+}
+
+thead {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+}
+
+th, td {
+  padding: 12px;
+  font-size: 14px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+tbody tr:nth-child(even) {
+  background: #f3f4f6;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* =====================================================
+   COMPARISON PAGE
+===================================================== */
+#comparisonContent h3 {
+  margin-top: 18px;
+  margin-bottom: 8px;
+  padding: 10px;
+  background: #eef2ff;
+  border-radius: 12px;
+}
+
+#comparisonContent ul {
+  margin-left: 20px;
+  margin-bottom: 14px;
+}
+
+#comparisonContent li {
+  margin-bottom: 6px;
+}
+
+/* =====================================================
+   MODALS
+===================================================== */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.hidden {
+  display: none !important;
+}
+
+
+.modal-content {
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+}
+
+/* =====================================================
+   AUTOCOMPLETE
+===================================================== */
+.autocomplete-wrapper {
+  margin-bottom: 14px;
+}
+
+/* =====================================================
+   MASTER PAGE
+===================================================== */
+#masterPage button {
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* =====================================================
+   HISTORY & BACK BUTTONS
+===================================================== */
+#historyPage button,
+#comparisonPage button,
+#historyDetailPage button {
+  width: 100%;
+  margin-top: 12px;
+}
+
+/* =====================================================
+   HIDDEN
+===================================================== */
+.hidden {
+  display: none !important;
+}
+
+/* =====================================================
+   FIX PDF PREVIEW MODAL SPACING
+===================================================== */
+
+#pdfPreviewModal .modal-content {
+  padding: 16px;
+}
+
+/* Reduce gap above table in preview */
+#pdfPreviewModal table {
+  margin-top: 6px;
+}
+
+/* Reduce date paragraph spacing */
+#pdfPreviewModal p {
+  margin: 6px 0;
+}
+
+/* Stack buttons nicely, no big gap */
+#pdfPreviewModal button {
+  margin-top: 10px;
+}
+
+/* Remove extra space below table */
+#pdfPreviewModal table + button {
+  margin-top: 12px;
+}
+/* =====================================================
+   PROFESSIONAL COMPARISON VIEW
+===================================================== */
+
+/* Comparison block container */
+#comparisonContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Month-to-month heading */
+#comparisonContent h3 {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 15px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+}
+
+/* Each section title (⬆️ বেড়েছে etc.) */
+#comparisonContent p {
+  margin: 0;
+  padding: 10px 12px;
+  font-weight: 700;
+  background: #eef2ff;
+  border-left: 6px solid #6366f1;
+  border-radius: 8px 8px 0 0;
+}
+
+/* List container becomes table body */
+#comparisonContent ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border: 1px solid #e5e7eb;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+}
+
+/* Each row */
+#comparisonContent li {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+}
+
+#comparisonContent li:last-child {
+  border-bottom: none;
+}
+
+/* Empty state */
+#comparisonContent li:only-child {
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Overall comparison section */
+#comparisonContent hr {
+  border: none;
+  height: 2px;
+  background: linear-gradient(90deg, #ddd, #aaa, #ddd);
+  margin: 24px 0 10px;
+}
+/* ================= DELETE HISTORY POPUP ================= */
+
+.delete-box {
+  text-align: center;
+}
+
+.delete-box h3 {
+  margin-bottom: 8px;
+  color: #b91c1c;
+}
+
+.delete-box p {
+  margin-bottom: 16px;
+  color: #374151;
+}
+
+.delete-actions {
+  display: flex;
+  gap: 12px;
+}
+
+#cancelDelete {
+  flex: 1;
+  background: #e5e7eb;
+  color: #111;
+}
+
+#confirmDelete {
+  flex: 1;
+  background: linear-gradient(135deg, #ff416c, #ff4b2b);
+  color: white;
+}
+
+
+
+/* ===== SMALL DELETE BUTTON (History) ===== */
+
+
+/* ===== PDF SAFE VISIBILITY ===== */
+
+
+/* ===== PDF CONTENT ===== */
+
+
+/* ===== HISTORY DELETE BUTTON ===== */
+.history-delete-btn {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  width: auto;
+  box-shadow: none;
+}
+
+.history-delete-btn:hover {
+  transform: scale(1.15);
+}
+/* ===== PDF CONTENT STYLES ===== */
+
+/* ===== PDF CONTENT (SAFE & INVISIBLE) ===== */
+
+
+/* ===== HISTORY DELETE BUTTON ===== */
+.history-delete-btn {
+  background: transparent !important;
+  border: none !important;
+  padding: 4px;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  width: auto;
+  box-shadow: none !important;
+}
+
+.history-delete-btn:hover {
+  transform: scale(1.15);
+}
+#pdfContent {
+  position: absolute;
+  left: -10000px;     /* off-screen */
+  top: 0;
+  width: 210mm;
+  background: #ffffff;
+  padding: 20px;
+  display: block;     /* REQUIRED */
+  visibility: visible;
+}
+styles: {
+  font: "NotoSansBengali",
+  fontStyle: "bold",
+  fontSize: 10,
+  cellPadding: 3,
+  valign: "middle",
+  lineColor: [190, 190, 190],
+  lineWidth: 0.25,
+  overflow: "linebreak"   // ⬅️ ADD THIS
+}
