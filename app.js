@@ -174,6 +174,13 @@ document.getElementById("addItemBtn").onclick = () =>
 
 
 document.getElementById("saveItem").onclick = () => {
+  const quantity = Number(qty.value);
+
+if (!quantity || quantity <= 0) {
+  alert("⚠️ দয়া করে সঠিক পরিমাণ লিখুন");
+  return;
+}
+
   const name = bnName.value.trim();
 
   // ❌ Block empty or space-only input
@@ -183,13 +190,14 @@ document.getElementById("saveItem").onclick = () => {
   }
 
   items.push({
-    id: Date.now(),
-    bn: name,
-    en: name,
-    checked: true,
-    quantity: Number(qty.value) || 1,
-    unit: unit.value
-  });
+  id: Date.now(),
+  bn: name,
+  en: name,
+  checked: true,
+  quantity: quantity,
+  unit: unit.value
+});
+
 
   bnName.value = ""; // clear input
   save();
@@ -328,10 +336,89 @@ document.getElementById("loadMaster").onclick = () => {
 
 /* ================= PDF + SAVE HISTORY ================= */
 
+/* ================= SHARE PDF (NEW FEATURE) ================= */
+
+document.getElementById("sharePdfBtn").onclick = async () => {
+  // 1️⃣ Build history entry (same structure, reused)
+  const historyEntry = {
+    date: formatDate(),
+    timestamp: Date.now(),
+    items: items
+      .filter(item => item.checked)
+      .map(item => ({
+        name: item.bn,
+        quantity: item.quantity,
+        unit: item.unit
+      }))
+  };
+
+  // 2️⃣ Save to history FIRST (even if PDF not manually generated)
+  saveHistory(historyEntry);
+
+  // 3️⃣ Create PDF silently using jsPDF
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.setFont("NotoSansBengali-Regular", "normal");
+  doc.setFontSize(14);
+  doc.text("মাসিক বাজারের তালিকা", 14, 15);
+  doc.setFontSize(10);
+  doc.text("তারিখ: " + historyEntry.date, 14, 22);
+
+  const tableData = historyEntry.items.map((item, index) => ([
+    index + 1,
+    item.name,
+    `${item.quantity} ${item.unit}`,
+    ""
+  ]));
+
+  doc.autoTable({
+    startY: 28,
+    head: [["ক্রম", "পণ্যের নাম", "পরিমাণ", "দাম"]],
+    body: tableData,
+    styles: { font: "NotoSansBengali-Regular" }
+  });
+
+  // 4️⃣ Convert PDF to Blob
+  const pdfBlob = doc.output("blob");
+  const file = new File([pdfBlob], "bazaar-list.pdf", {
+    type: "application/pdf"
+  });
+
+  // 5️⃣ Try Web Share API
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({
+        title: "মাসিক বাজারের তালিকা",
+        text: "আমার বাজারের তালিকা",
+        files: [file]
+      });
+    } catch (err) {
+      alert("শেয়ার বাতিল হয়েছে");
+    }
+  } else {
+    // 6️⃣ Fallback: download if share not supported
+    doc.save("bazaar-list.pdf");
+    alert("এই ডিভাইসে শেয়ার সাপোর্ট নেই, PDF ডাউনলোড হয়েছে");
+  }
+
+  // 7️⃣ Close preview after share
+  previewModal.classList.add("hidden");
+};
+
+
 const previewModal = document.getElementById("pdfPreviewModal");
 const previewTable = document.getElementById("previewTable");
 const previewDate = document.getElementById("previewDate");
 
+const invalidItem = items.find(
+  i => i.checked && (!i.quantity || i.quantity <= 0)
+);
+
+if (invalidItem) {
+  alert("⚠️ সব নির্বাচিত জিনিসের পরিমাণ দিতে হবে");
+  return;
+}
 document.getElementById("generatePdfBtn").onclick = () => {
   previewTable.innerHTML = "";
   previewDate.innerText = "তারিখ: " + formatDate();
@@ -778,13 +865,14 @@ if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
     }
 
     items.push({
-      id: Date.now(),
-      bn: text,
-      en: text,
-      checked: true,
-      quantity: 1,
-      unit: "unit"
-    });
+  id: Date.now(),
+  bn: text,
+  en: text,
+  checked: true,
+  quantity: "",   // ✅ EMPTY
+  unit: "unit"
+});
+
 
     save();
     render();
