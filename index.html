@@ -59,9 +59,10 @@
         <tbody id="previewTable"></tbody>
       </table>
 
-      <button id="confirmPdf">✅ PDF তৈরি করুন</button>
-<button id="sharePdfBtn">📤 শেয়ার করুন</button>
-<button id="cancelPreview">❌ ফিরে যান</button>
+    
+      <button id="saveImageBtn">🖼️ ছবি হিসেবে Save / Share করুন</button>
+
+    <button id="cancelPreview">❌ ফিরে যান</button>
 
     </div>
   </div>
@@ -156,8 +157,40 @@
 <!-- 3️⃣ Bengali font (ONLY ONCE, BEFORE app.js) -->
 <script src="assets/NotoSansBengali-Regular.js"></script>
 
+<!-- html2canvas (for image generation) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
 <!-- 4️⃣ App logic (ONLY ONCE, LAST) -->
 <script src="app.js"></script>
+
+
+<!-- ===== A4 IMAGE RENDER (HIDDEN, SAFE) ===== -->
+<div id="a4ImagePage" style="
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  width: 794px;
+  height: 1123px;
+  background: white;
+  padding: 40px;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+">
+  <h2 style="text-align:center;">📋 মাসিক বাজারের তালিকা</h2>
+  <p id="a4Date" style="text-align:center;"></p>
+
+  <table style="width:100%; border-collapse:collapse; margin-top:20px;">
+    <thead>
+      <tr>
+        <th style="border:1px solid #000;">ক্রম</th>
+        <th style="border:1px solid #000;">পণ্যের নাম</th>
+        <th style="border:1px solid #000;">পরিমাণ</th>
+        <th style="border:1px solid #000;">দাম</th>
+      </tr>
+    </thead>
+    <tbody id="a4TableBody"></tbody>
+  </table>
+</div>
 
 </body>
 </html>
