@@ -212,7 +212,7 @@ sareVariants.forEach(v => {
 
   // Bengali → English numbers
   const bnNums = {
-    "এক": 1, "দুই": 2, "তিন": 3, "চার": 4,
+    "এক": 1, "দুই": 2, "তিন": 3, "চার": 4, "পাচ": 5,
     "ছয়": 6, "সাত": 7, "আট": 8, "নয়": 9, "দশ": 10,  "পচিশ": 25,
   "পঞ্চাশ": 50,
   "পচাত্তর": 75,
@@ -1188,5 +1188,4 @@ resetCurrentList();
 }
 
 }); // End of DOMContentLoaded
-
 
