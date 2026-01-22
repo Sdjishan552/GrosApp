@@ -182,6 +182,23 @@ function parseVoiceInput(text) {
 
   let t = text.toLowerCase().trim();
 
+  // 📱 MOBILE BENGALI FIX: split number-word glue
+t = t
+  // Bengali digits → space
+  .replace(/([০-৯])([অ-হ])/g, "$1 $2")
+  .replace(/([অ-হ])([০-৯])/g, "$1 $2")
+
+  // English digits → space
+  .replace(/(\d)([a-zঅ-হ])/gi, "$1 $2")
+  .replace(/([a-zঅ-হ])(\d)/gi, "$1 $2")
+
+  // Bengali number words glued (তিনআলু → তিন আলু)
+  .replace(/(এক|দুই|তিন|চার|পাঁচ|ছয়|সাত|আট|নয়)([অ-হ])/g, "$1 $2")
+
+  .replace(/\s+/g, " ")
+  .trim();
+
+
   let quantity = null;
 
   /* ================= FRACTIONS ================= */
@@ -1064,4 +1081,5 @@ resetCurrentList();
 }
 
 }); // End of DOMContentLoaded
+
 
