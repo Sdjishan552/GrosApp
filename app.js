@@ -1065,5 +1065,3 @@ resetCurrentList();
 
 }); // End of DOMContentLoaded
 
-
-
