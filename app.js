@@ -625,13 +625,30 @@ card.querySelector(".history-delete-btn").onclick = (e) => {
 
 function openHistoryDetail(index) {
   const entry = getHistory()[index];
-  document.getElementById("historyDetailDate").innerText = "📅 " + entry.date;
 
-  const ul = document.getElementById("historyDetailList");
-  ul.innerHTML = "";
+  // set date
+  document.getElementById("historyDetailDate").innerText =
+    "📅 " + entry.date;
 
-  entry.items.forEach(i => {
-    ul.innerHTML += `<li>${i.name} – ${i.quantity} ${i.unit}</li>`;
+  // fill table body
+  const tbody = document.getElementById("historyDetailBody");
+  tbody.innerHTML = "";
+
+  let count = 1;
+
+  entry.items.forEach(item => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td style="text-align:center;">${count++}</td>
+      <td>${item.name}</td>
+      <td style="text-align:center;">
+        ${item.quantity} ${item.unit}
+      </td>
+      <td></td>
+    `;
+
+    tbody.appendChild(tr);
   });
 
   showHistoryDetail();
