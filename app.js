@@ -181,6 +181,12 @@ function parseVoiceInput(text) {
   if (!text) return null;
 
   let t = text.toLowerCase().trim();
+    // 📱 Mobile speech normalization (VERY IMPORTANT)
+t = t
+  .replace(/(\d)([a-zঅ-হ])/gi, "$1 $2")
+  .replace(/([a-zঅ-হ])(\d)/gi, "$1 $2")
+  .replace(/\s+/g, " ")
+  .trim();
 
   let quantity = null;
 
@@ -204,6 +210,21 @@ function parseVoiceInput(text) {
       break;
     }
   }
+  const bnNumberMap = {
+  "এক": 1,
+  "দুই": 2,
+  "তিন": 3,
+  "চার": 4,
+  "পাঁচ": 5,
+  "পাচ": 5,
+  "ছয়": 6,
+  "ছয়": 6,
+  "সাত": 7,
+  "আট": 8,
+  "নয়": 9,
+  "নয়": 9,
+  "দশ": 10
+};
 
   /* ================= DIGIT NUMBER (STRICT) ================= */
   if (quantity === null) {
@@ -213,6 +234,18 @@ function parseVoiceInput(text) {
       t = t.replace(numMatch[0], " ").trim();
     }
   }
+
+
+  // 🔢 Bengali number words (PHONE FIX)
+if (quantity === null) {
+  for (const word in bnNumberMap) {
+    if (t.includes(word)) {
+      quantity = bnNumberMap[word];
+      t = t.replace(word, " ").trim();
+      break;
+    }
+  }
+}
 
   /* ================= UNIT (DO NOT TOUCH LOGIC) ================= */
   const unitMap = {
