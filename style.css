@@ -324,12 +324,13 @@ tbody tr:last-child td {
 /* =====================================================
    HISTORY & BACK BUTTONS
 ===================================================== */
-#historyPage button,
-#comparisonPage button,
-#historyDetailPage button {
-  width: 100%;
-  margin-top: 12px;
+.history-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
+
 
 /* =====================================================
    HIDDEN
@@ -469,7 +470,6 @@ tbody tr:last-child td {
 }
 
 
-
 /* ===== SMALL DELETE BUTTON (History) ===== */
 
 
@@ -480,20 +480,7 @@ tbody tr:last-child td {
 
 
 /* ===== HISTORY DELETE BUTTON ===== */
-.history-delete-btn {
-  background: transparent;
-  border: none;
-  padding: 4px;
-  font-size: 16px;
-  line-height: 1;
-  cursor: pointer;
-  width: auto;
-  box-shadow: none;
-}
 
-.history-delete-btn:hover {
-  transform: scale(1.15);
-}
 /* ===== PDF CONTENT STYLES ===== */
 
 /* ===== PDF CONTENT (SAFE & INVISIBLE) ===== */
@@ -509,6 +496,9 @@ tbody tr:last-child td {
   cursor: pointer;
   width: auto;
   box-shadow: none !important;
+}
+.history-info {
+  flex: 1;
 }
 
 .history-delete-btn:hover {
@@ -681,4 +671,13 @@ body::before {
   background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(4px);
   z-index: -1;
+}
+/* ===== COMPACT ROW HEIGHT FOR IMAGE / PDF ===== */
+#a4ImagePage table td,
+#a4ImagePage table th,
+#pdfPreviewModal table td,
+#pdfPreviewModal table th {
+  padding: 6px 8px;   /* 🔽 reduced from 12px */
+  line-height: 1.1;
+  height: 22px;       /* visually ~70–75% of before */
 }
