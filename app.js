@@ -182,13 +182,12 @@ function parseVoiceInput(text) {
 
   let t = text.toLowerCase().trim();
 
-  // ---------- FRACTION MAP (STRICT) ----------
-  const fractionMap = {
-    "দেড়": 1.5,
-    "দের": 1.5,
-    "আড়াই": 2.5,
-    "আরাই": 2.5,
+  let quantity = null;
 
+  /* ================= FRACTIONS ================= */
+  const fractionMap = {
+    "দেড়": 1.5, "দের": 1.5,
+    "আড়াই": 2.5, "আরাই": 2.5,
     "সাড়ে তিন": 3.5,
     "সাড়ে চার": 4.5,
     "সাড়ে পাঁচ": 5.5,
@@ -198,18 +197,24 @@ function parseVoiceInput(text) {
     "সাড়ে নয়": 9.5
   };
 
-  let quantity = null;
-
-  // 🔥 STEP 1: Detect & REMOVE fractional phrase completely
   for (const phrase in fractionMap) {
     if (t.includes(phrase)) {
       quantity = fractionMap[phrase];
-      t = t.replace(phrase, "").trim(); // ⬅️ THIS WAS MISSING
+      t = t.replace(phrase, " ").trim();
       break;
     }
   }
 
-  // ---------- UNIT MAP ----------
+  /* ================= DIGIT NUMBER (STRICT) ================= */
+  if (quantity === null) {
+    const numMatch = t.match(/\d+(\.\d+)?/);
+    if (numMatch) {
+      quantity = parseFloat(numMatch[0]);
+      t = t.replace(numMatch[0], " ").trim();
+    }
+  }
+
+  /* ================= UNIT (DO NOT TOUCH LOGIC) ================= */
   const unitMap = {
     kg: ["kg", "কেজি", "কেজী"],
     gram: ["g", "gm", "গ্রাম"],
@@ -220,33 +225,24 @@ function parseVoiceInput(text) {
 
   let detectedUnit = null;
 
-  // 🔐 STEP 2: Detect & remove unit
   for (const [key, values] of Object.entries(unitMap)) {
     for (const v of values) {
       if (t.includes(v)) {
         detectedUnit = key;
-        t = t.replace(v, "").trim();
+        t = t.replace(v, " ").trim();
         break;
       }
     }
     if (detectedUnit) break;
   }
 
-  // 🔢 STEP 3: Normal numbers (only if fraction not found)
-  if (quantity === null) {
-    const numMatch = t.match(/\d+(\.\d+)?/);
-    if (numMatch) {
-      quantity = parseFloat(numMatch[0]);
-      t = t.replace(numMatch[0], "").trim();
-    }
-  }
+  /* ================= CLEAN LEFTOVER TEXT ================= */
+  t = t.replace(/\s+/g, " ").trim();
 
-  // 🏷️ STEP 4: Remaining text is PURE item name
-  const name = t.trim();
-  if (!name) return null;
+  if (!t) return null;
 
   return {
-    name,
+    name: t,                     // 🔒 PURE GOODS NAME ONLY
     quantity: quantity ?? "",
     unit: detectedUnit || "packet"
   };
