@@ -25,6 +25,7 @@ let items = JSON.parse(localStorage.getItem("items")) ||
     quantity: 1,
     unit: "unit"
   }));
+/*----------------------------------------------------------------------*/ let masterLoaded = false;
 
 let comparisonMode = false;
 /* ================= MASTER LIST ================= */
@@ -182,8 +183,21 @@ function parseVoiceInput(text) {
 
   // Bengali → English numbers
   const bnNums = {
-    "এক": 1, "দুই": 2, "তিন": 3, "চার": 4, "পাঁচ": 5,
-    "ছয়": 6, "সাত": 7, "আট": 8, "নয়": 9, "দশ": 10
+    "এক": 1, "দুই": 2, "তিন": 3, "চার": 4, "পাচ": 5,
+    "ছয়": 6, "সাত": 7, "আট": 8, "নয়": 9, "দশ": 10,  "পচিশ": 25,
+  "পঞ্চাশ": 50,
+  "পচাত্তর": 75,
+  "একশো": 100,
+  "দেড়শো": 150,
+  "একশো পঞ্চাশ": 150,
+  "একশো পচাত্তর": 175,
+  "দুশো": 200,
+  "আড়াইশো": 250,
+  "দুশো পঞ্চাশ": 250,
+  "পাচশো": 500,
+  "সাতশো পঞ্চাশ": 750,
+  "সাড়ে সাতশো": 750,
+
   };
 
   Object.keys(bnNums).forEach(bn => {
@@ -203,7 +217,15 @@ function parseVoiceInput(text) {
   let detectedUnit = null;
   let quantity = "";
 
-  // 🔐 STEP 1: Detect & lock UNIT first
+
+   // 🔢 STEP 1: Extract number
+  const numMatch = t.match(/(\d+(\.\d+)?)/);
+  if (numMatch) {
+    quantity = parseFloat(numMatch[1]);
+    t = t.replace(numMatch[1], "").trim();
+  }
+
+  // 🔐 STEP 2: Detect & lock UNIT first
   for (const [key, values] of Object.entries(unitMap)) {
     for (const v of values) {
       if (t.includes(v)) {
@@ -215,12 +237,6 @@ function parseVoiceInput(text) {
     if (detectedUnit) break;
   }
 
-  // 🔢 STEP 2: Extract number
-  const numMatch = t.match(/(\d+(\.\d+)?)/);
-  if (numMatch) {
-    quantity = parseFloat(numMatch[1]);
-    t = t.replace(numMatch[1], "").trim();
-  }
 
   // 🏷️ STEP 3: Remaining text = item name
   const name = t.trim();
@@ -374,31 +390,40 @@ document.getElementById("loadMaster").onclick = () => {
     return;
   }
 
-  items.forEach(i => i.checked = false);
+  // 🔁 IF master already loaded → ask & remove
+  if (masterLoaded) {
+    const ok = confirm("মাস্টার তালিকার সব জিনিস মুছে ফেলতে চান?");
+    if (!ok) return;
 
+    // remove only master items from home page
+    items = items.filter(
+      item => !master.some(m => m.bn === item.bn)
+    );
+
+    save();
+    render();
+    masterLoaded = false;
+    return;
+  }
+
+  // 🟢 FIRST TIME → add master items
   master.forEach(m => {
-    let found = items.find(i => i.bn === m.bn);
-
+    const found = items.find(i => i.bn === m.bn);
     if (!found) {
       items.unshift({
         id: Date.now() + Math.random(),
         bn: m.bn,
         en: m.en,
-        checked: true,
+        checked: false,
         quantity: "",
         unit: "packet"
       });
-    } else {
-      found.checked = true;
-      found.quantity = 1;
-      found.unit = "packet";
     }
   });
 
   save();
   render();
-
-
+  masterLoaded = true;
 };
 
 
@@ -494,24 +519,6 @@ document.getElementById("generatePdfBtn").onclick = () => {
 document.getElementById("cancelPreview").onclick = () => {
   previewModal.classList.add("hidden");
 };
-
-
-
-/* ================= SAVE TO HISTORY ================= */
-const historyEntry = {
-  date: formatDate(),
-  timestamp: Date.now(),
-  items: items
-    .filter(item => item.checked)
-    .map(item => ({
-      name: item.bn,
-      quantity: item.quantity,
-      unit: item.unit
-    }))
-};
-
-saveHistory(historyEntry);
-
 
 /* ================= HISTORY UI ================= */
 
