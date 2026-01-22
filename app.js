@@ -176,173 +176,51 @@ function resetCurrentList() {
   render();           // re-render UI
 }
 
+
 function parseVoiceInput(text) {
   if (!text) return null;
 
   let t = text.toLowerCase().trim();
-  // 🔧 CANONICAL SPELLING FIX (VOICE TOLERANCE)
-// 🔊 VOICE AUTOCORRECT FOR "সাড়ে"
-const sareVariants = [
-  "সারে",
-  "সাড়ে",
-  "সাড়ে",
-  "শড়ে",
-  "শাড়ে",
-  "শরে",
-  "শারে"
-];
 
-// normalize weird symbols first
-t = t.replace(/[|]/g, "");
+  // ---------- FRACTION MAP (STRICT) ----------
+  const fractionMap = {
+    "দেড়": 1.5,
+    "দের": 1.5,
+    "আড়াই": 2.5,
+    "আরাই": 2.5,
 
-// force canonical spelling
-sareVariants.forEach(v => {
-  if (t.includes(v)) {
-    t = t.replace(v, "সাড়ে");
-  }
-});
-
-
-// auto-correct wrong detection → correct spelling
-
-
-  // normalize dentesso (স) & murdonnoso (ষ) → talbeso (শ)
-  t = t.replace(/[সষ]ো/g, "শো");
-
-
-  // Bengali → English numbers
-  const bnNums = {
-    "এক": 1, "দুই": 2, "তিন": 3, "চার": 4, "পাচ": 5,"পাঁচ" : 5,
-    "ছয়": 6, "সাত": 7, "আট": 8, "নয়": 9, "দশ": 10,  "পচিশ": 25,
-  "পঞ্চাশ": 50,
-  "পচাত্তর": 75,
-  "একশো": 100,
-    "এক শো": 100,
-
-  "দেড়শো": 150,
-    "দেড় শো": 150,
-
-  "একশো পঞ্চাশ": 150,
-    "একশোপঞ্চাশ": 150,
-
-  "একশো পচাত্তর": 175,
-    "একশোপচাত্তর": 175,
-
-  "দুশো": 200,
-    "দু শো": 200,
-
-  "আড়াইশো": 250,
-    "আড়াই শো": 250,
-
-  "দুশো পঞ্চাশ": 250,
-    "দুশোপঞ্চাশ": 250,
-
-  "পাচশো": 500,
-    "পাচ শো": 500,
-
-  "সাতশো পঞ্চাশ": 750,
-    "সাতশোপঞ্চাশ": 750,
-
-  "সাড়ে সাতশো": 750,
-    "সাড়েসাতশো": 750,
-
-    
-
-  // 300 series
-  "তিনশো": 300,
-
-  // 400 series
-  "চারশো": 400,
-
-  // 500 series
-  "পাঁচশো": 500,
-  "পাচশো": 500,
-
-  // 600 series
-  "ছশো": 600,
-  "ছয়শো": 600,
-  "ছ শো": 600,
-  "ছশো": 600,
-
-  // 700 series
-  "সাতশো": 700,
-
-  // 800 series
-  "আটশো": 800,
-    "আট শো": 800,
-
-
-  // 900 series
-  "নয়শো": 900,
-  "নশো": 900,
-  "ন শো": 900,
-  "দেড়": 1.5,
-  "দের": 1.5,
-
-  "আড়াই": 2.5,
-  "আরাই": 2.5,
-
-  "সাড়ে তিন": 3.5,
-    "সাড়েতিন": 3.5,
-
-  "সাড়ে চার": 4.5,
-    "সাড়েচার": 4.5,
-
-  "সাড়ে পাঁচ": 5.5,
-    "সাড়েপাঁচ": 5.5,
-
-    "সাড়ে পাচ": 5.5,
-        "সাড়েপাচ": 5.5,
-
-
-  "সাড়ে ছয়": 6.5,
-    "সাড়েছয়": 6.5,
-
-    "সাড়ে ছ": 6.5,
-        "সাড়েছ": 6.5,
-
-
-  "সাড়ে সাত": 7.5,
-    "সাড়েসাত": 7.5,
-
-  "সাড়ে আট": 8.5,
-    "সাড়েআট": 8.5,
-
-  "সাড়ে নয়": 9.5,
-  
-  "সাড়েনয়": 9.5,
-    "সাড়েন": 9.5
-
-
-
+    "সাড়ে তিন": 3.5,
+    "সাড়ে চার": 4.5,
+    "সাড়ে পাঁচ": 5.5,
+    "সাড়ে ছয়": 6.5,
+    "সাড়ে সাত": 7.5,
+    "সাড়ে আট": 8.5,
+    "সাড়ে নয়": 9.5
   };
 
-  Object.keys(bnNums).forEach(bn => {
-    t = t.replace(bn, bnNums[bn]);
-  });
+  let quantity = null;
 
-  // Units map
+  // 🔥 STEP 1: Detect & REMOVE fractional phrase completely
+  for (const phrase in fractionMap) {
+    if (t.includes(phrase)) {
+      quantity = fractionMap[phrase];
+      t = t.replace(phrase, "").trim(); // ⬅️ THIS WAS MISSING
+      break;
+    }
+  }
+
+  // ---------- UNIT MAP ----------
   const unitMap = {
     kg: ["kg", "কেজি", "কেজী"],
-    gram: ["g", "gm", "gram", "গ্রাম"],
-    litre: ["l", "lt", "liter", "litre", "লিটার"],
+    gram: ["g", "gm", "গ্রাম"],
+    litre: ["l", "lt", "লিটার"],
     ml: ["ml", "মিলি"],
-    chain: ["chain", "চেইন", "চেন","চে"],
     packet: ["packet", "প্যাকেট"]
   };
 
   let detectedUnit = null;
-  let quantity = "";
 
-
-   // 🔢 STEP 1: Extract number
-  const numMatch = t.match(/(\d+(\.\d+)?)/);
-  if (numMatch) {
-    quantity = parseFloat(numMatch[1]);
-    t = t.replace(numMatch[1], "").trim();
-  }
-
-  // 🔐 STEP 2: Detect & lock UNIT first
+  // 🔐 STEP 2: Detect & remove unit
   for (const [key, values] of Object.entries(unitMap)) {
     for (const v of values) {
       if (t.includes(v)) {
@@ -354,17 +232,26 @@ sareVariants.forEach(v => {
     if (detectedUnit) break;
   }
 
+  // 🔢 STEP 3: Normal numbers (only if fraction not found)
+  if (quantity === null) {
+    const numMatch = t.match(/\d+(\.\d+)?/);
+    if (numMatch) {
+      quantity = parseFloat(numMatch[0]);
+      t = t.replace(numMatch[0], "").trim();
+    }
+  }
 
-  // 🏷️ STEP 3: Remaining text = item name
+  // 🏷️ STEP 4: Remaining text is PURE item name
   const name = t.trim();
   if (!name) return null;
 
   return {
     name,
-    quantity,
-    unit: detectedUnit || "packet" // default ONLY if nothing spoken
+    quantity: quantity ?? "",
+    unit: detectedUnit || "packet"
   };
 }
+
 
 /* ================= ADD ITEM ================= */
 
@@ -392,12 +279,13 @@ if (!quantity || quantity <= 0) {
 
   items.unshift({
   id: Date.now(),
-  bn: name,
-  en: name,
-  checked: true,
-  quantity: quantity,
-  unit: unit.value
+  bn: parsed.name,
+  en: parsed.name,
+  checked: true,              // 👈 REQUIRED
+  quantity: Number(parsed.quantity), // 👈 FORCE number
+  unit: parsed.unit
 });
+
 
 
   bnName.value = ""; // clear input
@@ -1065,22 +953,14 @@ if (parsed) {
     quantity: parsed.quantity,
     unit: parsed.unit
   });
+
+  save();
+  render();
 } else {
-  // fallback → old behaviour
-  items.unshift({
-    id: Date.now(),
-    bn: text,
-    en: text,
-    checked: true,
-    quantity: "",
-    unit: "packet"
-  });
+  alert("⚠️ বুঝতে পারিনি, আবার পরিষ্কার করে বলুন");
+  return;
 }
 
-
-
-    save();
-    render();
   };
 
   recognition.onerror = (event) => {
