@@ -176,21 +176,126 @@ function resetCurrentList() {
   render();           // re-render UI
 }
 
+function normalizeSpeechText(text) {
+  return text
+    // number + bengali/english letter → space
+    .replace(/(\d)([a-zA-Zঅ-হ])/g, "$1 $2")
+    .replace(/([a-zA-Zঅ-হ])(\d)/g, "$1 $2")
+
+    // decimal bengali numbers (৬.৫চাল)
+    .replace(/([০-৯]+(?:\.[০-৯]+)?)([অ-হ]+)/g, "$1 $2")
+
+    // unit glued with number (৬.৫kg)
+    .replace(/(\d)(kg|g|gm|gram|l|ml)/gi, "$1 $2")
+
+    // multiple spaces → one
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function bnDigitsToEn(text) {
+  const map = {
+    "০":"0","১":"1","২":"2","৩":"3","৪":"4",
+    "৫":"5","৬":"6","৭":"7","৮":"8","৯":"9"
+  };
+  return text.replace(/[০-৯]/g, d => map[d]);
+}
+
+function normalizeFractions(t) {
+  const map = {
+    "দেড়": "দেড়",
+    "ডের": "দেড়",
+    "দের": "দেড়",
+    "আড়াই": "আড়াই",
+    "আরাই": "আড়াই"
+  };
+  for (const k in map) {
+    t = t.replace(new RegExp(`\\b${k}\\b`, "g"), map[k]);
+  }
+  return t;
+}
+
+
+function parseQuantityByCharacters(text) {
+  // remove spaces completely for parsing
+  const s = text.replace(/\s+/g, "");
+
+  // DIRECT compound words (highest priority)
+  const directMap = {
+    "দের": 1.5,
+    "দেড়": 1.5,
+    "আড়াই": 2.5,
+    "আরাই": 2.5,
+    "দেরশো": 150,
+    "দেড়শো": 150,
+    "আড়াইশো": 250
+  };
+
+  // try longest match first
+  // scan letter-by-letter across the whole string
+const keys = Object.keys(directMap).sort((a, b) => b.length - a.length);
+
+for (let i = 0; i < s.length; i++) {
+  for (const k of keys) {
+    if (s.startsWith(k, i)) {
+      return {
+        value: directMap[k],
+        usedChars: k.length,
+        startIndex: i
+      };
+    }
+  }
+}
+
+return null;
+
+}
+
 
 function parseVoiceInput(text) {
   if (!text) return null;
+  let t = normalizeFractions(
+    normalizeSpeechText(
+      bnDigitsToEn(text.toLowerCase())
+    )
+  );
 
-  let t = text.toLowerCase().trim();
-    // 📱 Mobile speech normalization (VERY IMPORTANT)
-t = t
-  .replace(/(\d)([a-zঅ-হ])/gi, "$1 $2")
-  .replace(/([a-zঅ-হ])(\d)/gi, "$1 $2")
-  .replace(/\s+/g, " ")
-  .trim();
+  // 🔥 convert speech-time artifacts to numeric fractions
+t = t.replace(/\b(\d*):30\b/g, (_, h) => {
+  return h ? `${Number(h) + 0.5}` : "0.5";
+});
 
-  let quantity = null;
 
-  /* ================= FRACTIONS ================= */
+let quantity = null;
+
+// 🔥 direct numeric fraction pickup (0.5, 1.5, 2.5 etc)
+if (quantity === null) {
+  const fracMatch = t.match(/\b\d+\.\d+\b/);
+  if (fracMatch) {
+    quantity = parseFloat(fracMatch[0]);
+    t = t.replace(fracMatch[0], " ").trim();
+  }
+}
+
+// ================= CHARACTER PARSER (PRIMARY) =================
+const raw = t.replace(/\s+/g, "");
+const qtyResult = parseQuantityByCharacters(raw);
+
+if (qtyResult) {
+  quantity = qtyResult.value;
+
+  const consumed = raw.slice(
+    qtyResult.startIndex,
+    qtyResult.startIndex + qtyResult.usedChars
+  );
+
+  t = t.replace(consumed, " ").trim();
+}
+
+// ================= FALLBACK LOGIC =================
+if (quantity === null) {
+
+  /* ===== FRACTIONS ===== */
   const fractionMap = {
     "দেড়": 1.5, "দের": 1.5,
     "আড়াই": 2.5, "আরাই": 2.5,
@@ -206,27 +311,34 @@ t = t
   for (const phrase in fractionMap) {
     if (t.includes(phrase)) {
       quantity = fractionMap[phrase];
-      t = t.replace(phrase, " ").trim();
+      t = t.replace(new RegExp(`\\b${phrase}\\b`, "g"), " ").trim();
       break;
     }
   }
-  const bnNumberMap = {
-  "এক": 1,
-  "দুই": 2,
-  "তিন": 3,
-  "চার": 4,
-  "পাঁচ": 5,
-  "পাচ": 5,
-  "ছয়": 6,
-  "ছয়": 6,
-  "সাত": 7,
-  "আট": 8,
-  "নয়": 9,
-  "নয়": 9,
-  "দশ": 10
-};
 
-  /* ================= DIGIT NUMBER (STRICT) ================= */
+  if (quantity !== null) {
+    t = t.replace(/\d+(\.\d+)?/g, " ").trim();
+  }
+
+  /* ===== BENGALI NUMBER WORDS ===== */
+  const bnNumberMap = {
+    "এক": 1, "দুই": 2, "তিন": 3, "চার": 4,
+    "পাঁচ": 5, "পাচ": 5,
+    "ছয়": 6, "ছয়": 6,
+    "সাত": 7, "আট": 8,
+    "নয়": 9, "নয়": 9,
+    "দশ": 10
+  };
+
+  for (const word in bnNumberMap) {
+    if (quantity === null && t.includes(word)) {
+      quantity = bnNumberMap[word];
+      t = t.replace(new RegExp(`\\b${word}\\b`, "g"), " ").trim();
+      break;
+    }
+  }
+
+  /* ===== DIGIT NUMBER ===== */
   if (quantity === null) {
     const numMatch = t.match(/\d+(\.\d+)?/);
     if (numMatch) {
@@ -234,18 +346,8 @@ t = t
       t = t.replace(numMatch[0], " ").trim();
     }
   }
-
-
-  // 🔢 Bengali number words (PHONE FIX)
-if (quantity === null) {
-  for (const word in bnNumberMap) {
-    if (t.includes(word)) {
-      quantity = bnNumberMap[word];
-      t = t.replace(word, " ").trim();
-      break;
-    }
-  }
 }
+
 
   /* ================= UNIT (DO NOT TOUCH LOGIC) ================= */
   const unitMap = {
@@ -308,11 +410,11 @@ if (!quantity || quantity <= 0) {
 
   items.unshift({
   id: Date.now(),
-  bn: parsed.name,
-  en: parsed.name,
-  checked: true,              // 👈 REQUIRED
-  quantity: Number(parsed.quantity), // 👈 FORCE number
-  unit: parsed.unit
+  bn: name,
+  en: name,
+  checked: true,
+  quantity: quantity,
+  unit: "packet"
 });
 
 
@@ -322,6 +424,7 @@ if (!quantity || quantity <= 0) {
   modal.classList.add("hidden");
   render();
 };
+
 
 
 /* ================= HISTORY STORAGE ================= */
@@ -976,10 +1079,10 @@ if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
 if (parsed) {
   items.unshift({
     id: Date.now(),
-    bn: parsed.name,
+bn: parsed.name,
     en: parsed.name,
     checked: true,
-    quantity: parsed.quantity,
+quantity: parsed.quantity,
     unit: parsed.unit
   });
 
