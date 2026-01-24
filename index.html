@@ -108,8 +108,13 @@
     </thead>
     <tbody id="historyDetailBody"></tbody>
   </table>
-  <br>
-  <button id="backToHistory">⬅ ইতিহাসে ফিরে যান</button>
+<br>
+<h3>🧾 বিলের ছবি</h3>
+<div id="billImageGallery"></div>
+
+<br>
+<button id="backToHistory">⬅ ইতিহাসে ফিরে যান</button>
+
 </section>
 
 
@@ -117,6 +122,7 @@
 <section id="comparisonPage" class="hidden">
   <h2>📊 মাসভিত্তিক তুলনা</h2>
   <div id="comparisonContent"></div>
+  <br>
   <button id="backFromComparison">⬅ ফিরে যান</button>
 </section>
 
@@ -204,6 +210,19 @@
     </thead>
     <tbody id="a4TableBody"></tbody>
   </table>
+</div>
+
+<!-- ================= IMAGE VIEWER MODAL ================= -->
+<div id="imageViewerModal" class="modal hidden">
+  <div class="modal-content" style="max-width:95%; max-height:95%; padding:10px;">
+    <img id="fullImageView" style="
+      width:100%;
+      height:auto;
+      max-height:90vh;
+      object-fit:contain;
+    " />
+    <button id="closeImageViewer" style="margin-top:10px;">❌ বন্ধ করুন</button>
+  </div>
 </div>
 
 </body>
