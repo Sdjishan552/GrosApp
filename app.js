@@ -388,8 +388,12 @@ if (quantity === null) {
 
 const modal = document.getElementById("modal");
 
-document.getElementById("addItemBtn").onclick = () =>
+document.getElementById("addItemBtn").onclick = () => {
+  bnName.value = "";
+  qty.value = "";     // ✅ reset quantity every time
   modal.classList.remove("hidden");
+};
+
 
 
 document.getElementById("saveItem").onclick = () => {
@@ -419,10 +423,12 @@ if (!quantity || quantity <= 0) {
 
 
 
-  bnName.value = ""; // clear input
-  save();
-  modal.classList.add("hidden");
-  render();
+  bnName.value = "";   // clear name
+qty.value = "";      // ✅ clear quantity
+save();
+modal.classList.add("hidden");
+render();
+
 };
 
 
@@ -572,17 +578,20 @@ const sharePdfBtn = document.getElementById("sharePdfBtn");
 if (sharePdfBtn) {
   sharePdfBtn.onclick = async () => {
     // 1️⃣ Build history entry
-    const historyEntry = {
-      date: formatDate(),
-      timestamp: Date.now(),
-      items: items
-        .filter(item => item.checked)
-        .map(item => ({
-          name: item.bn,
-          quantity: item.quantity,
-          unit: item.unit
-        }))
-    };
+   const historyEntry = {
+  date: formatDate(),
+  timestamp: Date.now(),
+  items: items
+    .filter(item => item.checked)
+    .map(item => ({
+      name: item.bn,
+      quantity: item.quantity,
+      unit: item.unit
+    })),
+  billImages: []   // ✅ ADD THIS LINE
+};
+
+
 
     saveHistory(historyEntry);
 
@@ -723,7 +732,10 @@ card.innerHTML = `
       <p>${entry.items.length} টি জিনিস</p>
     </div>
 
-    <button class="history-delete-btn" title="Delete">🗑️</button>
+    <div>
+      <button class="add-bill-btn">📸</button>
+      <button class="history-delete-btn">🗑️</button>
+    </div>
   </div>
 `;
 
@@ -737,6 +749,10 @@ card.querySelector(".history-delete-btn").onclick = (e) => {
   e.stopPropagation(); // 🔥 this saves everything
   deleteTargetIndex = index;
   deleteModal.classList.remove("hidden");
+};
+card.querySelector(".add-bill-btn").onclick = (e) => {
+  e.stopPropagation();
+  captureBillImage(index);
 };
 
 }
@@ -787,6 +803,25 @@ function openHistoryDetail(index) {
 
     tbody.appendChild(tr);
   });
+const gallery = document.getElementById("billImageGallery");
+gallery.innerHTML = "";
+
+if (!entry.billImages || entry.billImages.length === 0) {
+  gallery.innerHTML = "<p>কোনো বিলের ছবি নেই</p>";
+} else {
+  entry.billImages.forEach(img => {
+  const image = document.createElement("img");
+  image.src = img.image;
+  image.className = "bill-thumb";
+
+  image.onclick = () => {
+    openImageViewer(img.image);
+  };
+
+  gallery.appendChild(image);
+});
+
+}
 
   showHistoryDetail();
 }
@@ -1140,8 +1175,10 @@ const historyEntry = {
       name: item.bn,
       quantity: item.quantity,
       unit: item.unit
-    }))
+    })),
+  billImages: []   // ✅ ADD THIS LINE
 };
+
 
 saveHistory(historyEntry);
 
@@ -1198,6 +1235,59 @@ resetCurrentList();
 
   };
 }
+function captureBillImage(historyIndex) {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.capture = "environment";
+
+  input.onchange = () => {
+    const file = input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const history = getHistory();
+
+      // safety for old entries
+      history[historyIndex].billImages ||= [];
+
+      history[historyIndex].billImages.push({
+        id: Date.now(),
+        image: reader.result,
+        time: Date.now()
+      });
+
+      localStorage.setItem("history", JSON.stringify(history));
+      alert("✅ বিলের ছবি সেভ হয়েছে");
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  input.click();
+}
+const imageViewerModal = document.getElementById("imageViewerModal");
+const fullImageView = document.getElementById("fullImageView");
+const closeImageViewer = document.getElementById("closeImageViewer");
+
+function openImageViewer(src) {
+  fullImageView.src = src;
+  imageViewerModal.classList.remove("hidden");
+}
+
+closeImageViewer.onclick = () => {
+  imageViewerModal.classList.add("hidden");
+  fullImageView.src = "";
+};
+
+// close when clicking outside image
+imageViewerModal.onclick = (e) => {
+  if (e.target === imageViewerModal) {
+    imageViewerModal.classList.add("hidden");
+    fullImageView.src = "";
+  }
+};
 
 }); // End of DOMContentLoaded
 
